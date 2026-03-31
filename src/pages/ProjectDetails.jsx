@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Box, Container, CircularProgress, Typography } from '@mui/material'
+import { Box, Container, CircularProgress, Typography, Alert } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseReady } from '../lib/supabase'
 import SaveBar from '../components/Layout/SaveBar'
 import Navbar from '../components/Layout/Navbar'
 import MarketAddedValue from '../components/ProjectDetails/MarketAddedValue'
@@ -189,6 +189,11 @@ export default function ProjectDetails() {
         saving={saving}
       />
       <Container maxWidth="lg" sx={{ py: 4 }}>
+        {!supabaseReady && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            <strong>Supabase not connected.</strong> Add your project URL and anon key to <code>.env.local</code> and restart the dev server to enable saving. See <strong>SETUP.md</strong> for instructions.
+          </Alert>
+        )}
         <MarketAddedValue value={marketValue} onChange={setMarketValue} />
         <ProjectControlling />
         <StakeholderMap stakeholders={stakeholders} onChange={setStakeholders} />

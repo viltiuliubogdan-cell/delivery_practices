@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import {
   Box, Container, Typography, CircularProgress, Grid, Paper, Chip,
-  Tabs, Tab, Divider
+  Tabs, Tab, Divider, Alert
 } from '@mui/material'
 import Navbar from '../components/Layout/Navbar'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseReady } from '../lib/supabase'
 import HealthMetricsChart from '../components/Dashboard/HealthMetricsChart'
 import VelocityChart from '../components/Dashboard/VelocityChart'
 import NFRCoverageChart from '../components/Dashboard/NFRCoverageChart'
@@ -65,6 +65,11 @@ export default function Dashboard() {
           </Box>
         </Box>
 
+        {!supabaseReady && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            <strong>Supabase not connected.</strong> Add your project URL and anon key to <code>.env.local</code> and restart the dev server. See <strong>SETUP.md</strong> for instructions.
+          </Alert>
+        )}
         {noData ? (
           <Paper elevation={2} sx={{ p: 6, textAlign: 'center' }}>
             <Typography variant="h6" color="text.secondary">No project data yet.</Typography>
