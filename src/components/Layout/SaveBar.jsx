@@ -1,9 +1,20 @@
-import { AppBar, Toolbar, TextField, Button, Box, CircularProgress, Snackbar, Alert } from '@mui/material'
+import { AppBar, Toolbar, TextField, Button, Box, CircularProgress, Snackbar, Alert, Chip } from '@mui/material'
 import SaveIcon from '@mui/icons-material/Save'
+import SearchIcon from '@mui/icons-material/Search'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useState } from 'react'
 
-export default function SaveBar({ projectName, onProjectNameChange, onSave, saving }) {
+export default function SaveBar({ projectName, onProjectNameChange, onLoad, onSave, saving, projectLoaded }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
+  const [loading, setLoading] = useState(false)
+
+  const handleLoad = async () => {
+    if (!projectName.trim()) return
+    setLoading(true)
+    await onLoad(projectName)
+    setLoading(false)
+    setSnackbar({ open: true, message: `Project "${projectName}" loaded.`, severity: 'info' })
+  }
 
   const handleSave = async () => {
     const result = await onSave()
@@ -14,30 +25,53 @@ export default function SaveBar({ projectName, onProjectNameChange, onSave, savi
     }
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleLoad()
+  }
+
   return (
     <>
       <AppBar position="sticky" sx={{ top: 0, zIndex: 1100, backgroundColor: '#283593' }}>
         <Toolbar sx={{ gap: 2 }}>
-          <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
             <TextField
               value={projectName}
               onChange={e => onProjectNameChange(e.target.value)}
-              placeholder="Project Name *"
+              onKeyDown={handleKeyDown}
+              placeholder="Enter project name..."
               variant="outlined"
               size="small"
               required
               sx={{
-                minWidth: 280,
+                minWidth: 260,
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: 'rgba(255,255,255,0.15)',
                   color: 'white',
                   '& fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
                   '&:hover fieldset': { borderColor: 'white' },
                 },
-                '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.7)' },
                 '& .MuiInputBase-input': { color: 'white' },
+                '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.7)' },
               }}
             />
+            <Button
+              variant="outlined"
+              startIcon={loading ? <CircularProgress size={14} color="inherit" /> : <SearchIcon />}
+              onClick={handleLoad}
+              disabled={loading || !projectName.trim()}
+              size="small"
+              sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.6)', '&:hover': { borderColor: 'white' }, whiteSpace: 'nowrap' }}
+            >
+              Load
+            </Button>
+            {projectLoaded && (
+              <Chip
+                icon={<CheckCircleIcon sx={{ color: '#a5d6a7 !important' }} />}
+                label="Loaded"
+                size="small"
+                sx={{ backgroundColor: 'rgba(76,175,80,0.25)', color: '#a5d6a7', border: '1px solid rgba(165,214,167,0.4)' }}
+              />
+            )}
           </Box>
           <Button
             variant="contained"

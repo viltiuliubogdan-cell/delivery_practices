@@ -1,7 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Box, Container, CircularProgress, Typography, Alert } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useState, useEffect } from 'react'
+import { Box, Container, Alert } from '@mui/material'
 import { supabase, supabaseReady } from '../lib/supabase'
 import SaveBar from '../components/Layout/SaveBar'
 import Navbar from '../components/Layout/Navbar'
@@ -23,14 +21,10 @@ const initNfrs = () => {
 }
 
 export default function ProjectDetails() {
-  const { user, loading: authLoading } = useAuth()
-  const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [projectId, setProjectId] = useState(null)
   const [projectName, setProjectName] = useState('')
 
-  // Section state
   const [marketValue, setMarketValue] = useState('')
   const [stakeholders, setStakeholders] = useState([])
   const [metrics, setMetrics] = useState(initMetrics)
@@ -40,36 +34,37 @@ export default function ProjectDetails() {
   const [attritionGoal, setAttritionGoal] = useState('')
   const [participationGoal, setParticipationGoal] = useState('')
 
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/login')
-  }, [user, authLoading, navigate])
-
-  useEffect(() => {
-    if (user) loadProject()
-  }, [user])
-
-  const loadProject = async () => {
-    setLoading(true)
-    try {
-      // Load project
-      const { data: projects } = await supabase.from('projects').select('*').eq('user_id', user.id).limit(1)
-      if (projects?.length > 0) {
-        const p = projects[0]
-        setProjectId(p.id)
-        setProjectName(p.name)
-        await loadProjectData(p.id)
-      }
-    } finally {
-      setLoading(false)
-    }
+  const resetForm = () => {
+    setProjectId(null)
+    setMarketValue('')
+    setStakeholders([])
+    setMetrics(initMetrics())
+    setNfrs(initNfrs())
+    setCnpsGoal('')
+    setEnpsGoal('')
+    setAttritionGoal('')
+    setParticipationGoal('')
   }
 
-  const loadProjectData = async (pid) => {
+  const loadProject = async (name) => {
+    if (!name.trim()) return
+    resetForm()
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('*')
+      .ilike('name', name.trim())
+      .limit(1)
+
+    if (!projects?.length) return
+
+    const p = projects[0]
+    setProjectId(p.id)
+
     const [configRes, stakeholdersRes, metricsRes, nfrRes] = await Promise.all([
-      supabase.from('project_config').select('*').eq('project_id', pid).single(),
-      supabase.from('stakeholders').select('*').eq('project_id', pid),
-      supabase.from('health_metric_configs').select('*').eq('project_id', pid),
-      supabase.from('nfr_configs').select('*').eq('project_id', pid),
+      supabase.from('project_config').select('*').eq('project_id', p.id).single(),
+      supabase.from('stakeholders').select('*').eq('project_id', p.id),
+      supabase.from('health_metric_configs').select('*').eq('project_id', p.id),
+      supabase.from('nfr_configs').select('*').eq('project_id', p.id),
     ])
 
     if (configRes.data) {
@@ -104,20 +99,33 @@ export default function ProjectDetails() {
     if (!projectName.trim()) return { error: 'Project name is required' }
     setSaving(true)
     try {
-      // Upsert project
       let pid = projectId
+
       if (!pid) {
-        const { data, error } = await supabase.from('projects')
-          .insert({ user_id: user.id, name: projectName, pm_name: user.email })
-          .select().single()
-        if (error) return { error: error.message }
-        pid = data.id
-        setProjectId(pid)
+        // Check if project with this name already exists
+        const { data: existing } = await supabase
+          .from('projects')
+          .select('id')
+          .ilike('name', projectName.trim())
+          .limit(1)
+
+        if (existing?.length > 0) {
+          pid = existing[0].id
+          setProjectId(pid)
+        } else {
+          const { data, error } = await supabase
+            .from('projects')
+            .insert({ name: projectName.trim() })
+            .select()
+            .single()
+          if (error) return { error: error.message }
+          pid = data.id
+          setProjectId(pid)
+        }
       } else {
-        await supabase.from('projects').update({ name: projectName, updated_at: new Date().toISOString() }).eq('id', pid)
+        await supabase.from('projects').update({ name: projectName.trim(), updated_at: new Date().toISOString() }).eq('id', pid)
       }
 
-      // Upsert project config
       await supabase.from('project_config').upsert({
         project_id: pid,
         market_added_value: marketValue,
@@ -128,13 +136,11 @@ export default function ProjectDetails() {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'project_id' })
 
-      // Upsert stakeholders (delete and re-insert)
       await supabase.from('stakeholders').delete().eq('project_id', pid)
       if (stakeholders.length > 0) {
         await supabase.from('stakeholders').insert(stakeholders.map(s => ({ ...s, project_id: pid })))
       }
 
-      // Upsert health metrics
       const metricRows = HEALTH_METRICS.map(m => ({
         project_id: pid,
         metric_key: m.key,
@@ -146,7 +152,6 @@ export default function ProjectDetails() {
       }))
       await supabase.from('health_metric_configs').upsert(metricRows, { onConflict: 'project_id,metric_key' })
 
-      // Upsert NFRs
       const nfrRows = []
       NFR_CATEGORIES.forEach(cat => {
         cat.items.forEach(item => {
@@ -171,27 +176,21 @@ export default function ProjectDetails() {
     }
   }
 
-  if (authLoading || loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    )
-  }
-
   return (
     <Box sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <Navbar />
       <SaveBar
         projectName={projectName}
         onProjectNameChange={setProjectName}
+        onLoad={loadProject}
         onSave={handleSave}
         saving={saving}
+        projectLoaded={!!projectId}
       />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {!supabaseReady && (
           <Alert severity="warning" sx={{ mb: 3 }}>
-            <strong>Supabase not connected.</strong> Add your project URL and anon key to <code>.env.local</code> and restart the dev server to enable saving. See <strong>SETUP.md</strong> for instructions.
+            <strong>Supabase not connected.</strong> Add your credentials to <code>.env.local</code> and restart. See <strong>SETUP.md</strong>.
           </Alert>
         )}
         <MarketAddedValue value={marketValue} onChange={setMarketValue} />

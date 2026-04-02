@@ -1,6 +1,5 @@
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import AssignmentIcon from '@mui/icons-material/Assignment'
 import HomeIcon from '@mui/icons-material/Home'
@@ -8,12 +7,6 @@ import HomeIcon from '@mui/icons-material/Home'
 export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, signOut } = useAuth()
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/')
-  }
 
   return (
     <AppBar position="sticky" sx={{ backgroundColor: '#1a237e' }}>
@@ -25,7 +18,7 @@ export default function Navbar() {
         >
           Delivery Practices
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             color="inherit"
             startIcon={<HomeIcon />}
@@ -51,14 +44,6 @@ export default function Navbar() {
             Projects Dashboard
           </Button>
         </Box>
-        {user && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" sx={{ opacity: 0.8 }}>{user.email}</Typography>
-            <Button color="inherit" variant="outlined" size="small" onClick={handleSignOut}>
-              Sign Out
-            </Button>
-          </Box>
-        )}
       </Toolbar>
     </AppBar>
   )
