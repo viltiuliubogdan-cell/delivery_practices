@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
+import { Analytics } from '@vercel/analytics/react'
 import Home from './pages/Home'
 import ProjectDetails from './pages/ProjectDetails'
 import Dashboard from './pages/Dashboard'
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      <Analytics />
     </ThemeProvider>
   )
 }
