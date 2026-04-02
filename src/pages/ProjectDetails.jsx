@@ -4,7 +4,6 @@ import { supabase, supabaseReady } from '../lib/supabase'
 import SaveBar from '../components/Layout/SaveBar'
 import Navbar from '../components/Layout/Navbar'
 import MarketAddedValue from '../components/ProjectDetails/MarketAddedValue'
-import ProjectControlling from '../components/ProjectDetails/ProjectControlling'
 import StakeholderMap from '../components/ProjectDetails/StakeholderMap'
 import HealthMetrics, { HEALTH_METRICS } from '../components/ProjectDetails/HealthMetrics'
 import ExecutionPractices from '../components/ProjectDetails/ExecutionPractices'
@@ -194,10 +193,7 @@ export default function ProjectDetails() {
           </Alert>
         )}
         <MarketAddedValue value={marketValue} onChange={setMarketValue} />
-        <ProjectControlling />
-        <StakeholderMap stakeholders={stakeholders} onChange={setStakeholders} />
         <HealthMetrics metrics={metrics} onChange={setMetrics} />
-        <ExecutionPractices />
         <NonFunctionalRequirements nfrs={nfrs} onChange={setNfrs} />
         <CustomerSatisfaction cnpsGoal={cnpsGoal} onChange={setCnpsGoal} />
         <EmployeeSatisfaction
@@ -211,6 +207,8 @@ export default function ProjectDetails() {
           }}
         />
         <MonthlyDataEntry projectId={projectId} />
+        <StakeholderMap stakeholders={stakeholders} onChange={setStakeholders} />
+        <ExecutionPractices />
       </Container>
     </Box>
   )
