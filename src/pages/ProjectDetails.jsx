@@ -175,6 +175,33 @@ export default function ProjectDetails() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!projectId) return { error: 'No project loaded' }
+    try {
+      await supabase.from('monthly_metrics').delete().eq('project_id', projectId)
+      await supabase.from('nfr_configs').delete().eq('project_id', projectId)
+      await supabase.from('health_metric_configs').delete().eq('project_id', projectId)
+      await supabase.from('stakeholders').delete().eq('project_id', projectId)
+      await supabase.from('project_config').delete().eq('project_id', projectId)
+      const { error } = await supabase.from('projects').delete().eq('id', projectId)
+      if (error) return { error: error.message }
+      // Reset form
+      setProjectId(null)
+      setProjectName('')
+      setMarketValue('')
+      setStakeholders([])
+      setMetrics(initMetrics())
+      setNfrs(initNfrs())
+      setCnpsGoal('')
+      setEnpsGoal('')
+      setAttritionGoal('')
+      setParticipationGoal('')
+      return {}
+    } catch (err) {
+      return { error: err.message }
+    }
+  }
+
   return (
     <Box sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <Navbar />
@@ -183,6 +210,7 @@ export default function ProjectDetails() {
         onProjectNameChange={setProjectName}
         onLoad={loadProject}
         onSave={handleSave}
+        onDelete={handleDelete}
         saving={saving}
         projectLoaded={!!projectId}
       />

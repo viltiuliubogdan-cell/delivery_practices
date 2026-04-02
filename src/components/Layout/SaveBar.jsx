@@ -1,12 +1,19 @@
-import { AppBar, Toolbar, TextField, Button, Box, CircularProgress, Snackbar, Alert, Chip } from '@mui/material'
+import {
+  AppBar, Toolbar, TextField, Button, Box, CircularProgress,
+  Snackbar, Alert, Chip, Dialog, DialogTitle, DialogContent,
+  DialogContentText, DialogActions
+} from '@mui/material'
 import SaveIcon from '@mui/icons-material/Save'
 import SearchIcon from '@mui/icons-material/Search'
+import DeleteIcon from '@mui/icons-material/Delete'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useState } from 'react'
 
-export default function SaveBar({ projectName, onProjectNameChange, onLoad, onSave, saving, projectLoaded }) {
+export default function SaveBar({ projectName, onProjectNameChange, onLoad, onSave, onDelete, saving, projectLoaded }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const handleLoad = async () => {
     if (!projectName.trim()) return
@@ -22,6 +29,18 @@ export default function SaveBar({ projectName, onProjectNameChange, onLoad, onSa
       setSnackbar({ open: true, message: 'Error saving: ' + result.error, severity: 'error' })
     } else {
       setSnackbar({ open: true, message: 'Project saved successfully!', severity: 'success' })
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    setConfirmOpen(false)
+    setDeleting(true)
+    const result = await onDelete()
+    setDeleting(false)
+    if (result?.error) {
+      setSnackbar({ open: true, message: 'Error deleting: ' + result.error, severity: 'error' })
+    } else {
+      setSnackbar({ open: true, message: 'Project deleted.', severity: 'success' })
     }
   }
 
@@ -73,6 +92,22 @@ export default function SaveBar({ projectName, onProjectNameChange, onLoad, onSa
               />
             )}
           </Box>
+          {projectLoaded && (
+            <Button
+              variant="outlined"
+              startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
+              onClick={() => setConfirmOpen(true)}
+              disabled={deleting || saving}
+              size="small"
+              sx={{
+                color: '#ef9a9a', borderColor: 'rgba(239,154,154,0.6)',
+                '&:hover': { borderColor: '#ef9a9a', backgroundColor: 'rgba(239,154,154,0.1)' },
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Delete Project
+            </Button>
+          )}
           <Button
             variant="contained"
             startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
@@ -84,6 +119,30 @@ export default function SaveBar({ projectName, onProjectNameChange, onLoad, onSa
           </Button>
         </Toolbar>
       </AppBar>
+
+      {/* Confirm Delete Dialog */}
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle fontWeight={700} sx={{ color: '#c62828' }}>
+          Delete Project
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to permanently delete <strong>"{projectName}"</strong>? This will remove all saved data including health metrics, NFRs, stakeholders, and monthly data. This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteConfirm}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
