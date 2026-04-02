@@ -234,7 +234,7 @@ export default function ProjectDetails() {
             else if (field === 'participation') setParticipationGoal(val)
           }}
         />
-        <MonthlyDataEntry projectId={projectId} />
+        <MonthlyDataEntry projectId={projectId} metrics={metrics} />
         <StakeholderMap stakeholders={stakeholders} onChange={setStakeholders} />
         <ExecutionPractices />
       </Container>

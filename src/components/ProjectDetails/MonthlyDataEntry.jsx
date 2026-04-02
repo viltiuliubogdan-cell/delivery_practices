@@ -1,30 +1,48 @@
-import { Paper, Typography, Box, TextField, Grid, Button, Divider } from '@mui/material'
+import { Paper, Typography, Box, TextField, Grid, Button, Divider, Chip } from '@mui/material'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { HEALTH_METRICS } from './HealthMetrics'
 
-export default function MonthlyDataEntry({ projectId }) {
+const QUALITY_KEYS = HEALTH_METRICS.filter(m => m.category === 'Quality').map(m => m.key)
+const PRODUCTIVITY_KEYS = ['velocity', 'cycle_time']
+
+export default function MonthlyDataEntry({ projectId, metrics = {} }) {
   const [month, setMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
-  const [data, setData] = useState({ customer_cnps: '', employee_enps: '', employee_attrition: '', employee_participation: '', velocity: '', cycle_time: '' })
+  const [data, setData] = useState({})
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+
+  const set = (key, val) => setData(d => ({ ...d, [key]: val }))
+  const val = (key) => data[key] ?? ''
+
+  const selectedProductivity = HEALTH_METRICS.filter(
+    m => m.category === 'Productivity' && metrics[m.key]?.selected
+  )
+  const selectedQuality = HEALTH_METRICS.filter(
+    m => m.category === 'Quality' && metrics[m.key]?.selected
+  )
 
   const handleSave = async () => {
     if (!projectId) return
     setSaving(true)
-    const monthDate = `${month}-01`
+    const qualityData = {}
+    selectedQuality.forEach(m => {
+      if (data[m.key] !== '' && data[m.key] !== undefined) qualityData[m.key] = Number(data[m.key])
+    })
     const payload = {
       project_id: projectId,
-      month: monthDate,
-      customer_cnps: data.customer_cnps !== '' ? Number(data.customer_cnps) : null,
-      employee_enps: data.employee_enps !== '' ? Number(data.employee_enps) : null,
-      employee_attrition: data.employee_attrition !== '' ? Number(data.employee_attrition) : null,
-      employee_participation: data.employee_participation !== '' ? Number(data.employee_participation) : null,
-      velocity: data.velocity !== '' ? Number(data.velocity) : null,
-      cycle_time: data.cycle_time !== '' ? Number(data.cycle_time) : null,
+      month: `${month}-01`,
+      customer_cnps: val('customer_cnps') !== '' ? Number(val('customer_cnps')) : null,
+      employee_enps: val('employee_enps') !== '' ? Number(val('employee_enps')) : null,
+      employee_attrition: val('employee_attrition') !== '' ? Number(val('employee_attrition')) : null,
+      employee_participation: val('employee_participation') !== '' ? Number(val('employee_participation')) : null,
+      velocity: val('velocity') !== '' ? Number(val('velocity')) : null,
+      cycle_time: val('cycle_time') !== '' ? Number(val('cycle_time')) : null,
+      quality_data: Object.keys(qualityData).length > 0 ? qualityData : null,
       updated_at: new Date().toISOString(),
     }
     const { error } = await supabase.from('monthly_metrics').upsert(payload, { onConflict: 'project_id,month' })
@@ -33,16 +51,22 @@ export default function MonthlyDataEntry({ projectId }) {
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const field = (label, key, hint) => (
+  const Field = ({ label, fieldKey, hint }) => (
     <TextField
       label={label}
       type="number"
       size="small"
-      value={data[key]}
-      onChange={e => setData(d => ({ ...d, [key]: e.target.value }))}
+      value={val(fieldKey)}
+      onChange={e => set(fieldKey, e.target.value)}
       placeholder={hint}
       fullWidth
     />
+  )
+
+  const SectionHeader = ({ label, color = 'primary' }) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+      <Typography variant="subtitle2" fontWeight={700} color={color}>{label}</Typography>
+    </Box>
   )
 
   return (
@@ -54,37 +78,87 @@ export default function MonthlyDataEntry({ projectId }) {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Record actual monthly metrics to power the Projects Dashboard charts.
       </Typography>
-      <Box sx={{ mb: 3 }}>
-        <TextField
-          label="Month"
-          type="month"
-          value={month}
-          onChange={e => setMonth(e.target.value)}
-          size="small"
-          InputLabelProps={{ shrink: true }}
-        />
-      </Box>
+
+      <TextField
+        label="Month"
+        type="month"
+        value={month}
+        onChange={e => setMonth(e.target.value)}
+        size="small"
+        InputLabelProps={{ shrink: true }}
+        sx={{ mb: 3 }}
+      />
+
       <Divider sx={{ mb: 3 }} />
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1 }}>Satisfaction Scores</Typography>
+
+      {/* Row 1 — Satisfaction Scores */}
+      <Box sx={{ mb: 3 }}>
+        <SectionHeader label="Satisfaction Scores" />
+        <Grid container spacing={2}>
+          <Grid item xs={6} sm={3}>
+            <Field label="Customer cNPS" fieldKey="customer_cnps" hint="e.g. 65" />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <Field label="Employee eNPS" fieldKey="employee_enps" hint="e.g. 55" />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <Field label="Attrition %" fieldKey="employee_attrition" hint="e.g. 12" />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <Field label="Participation %" fieldKey="employee_participation" hint="e.g. 70" />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={4}>{field('Customer cNPS (actual)', 'customer_cnps', 'e.g. 65')}</Grid>
-        <Grid item xs={12} sm={4}>{field('Employee eNPS (actual)', 'employee_enps', 'e.g. 55')}</Grid>
-        <Grid item xs={12} sm={4}>{field('Attrition % (actual)', 'employee_attrition', 'e.g. 12')}</Grid>
-        <Grid item xs={12} sm={4}>{field('Participation % (actual)', 'employee_participation', 'e.g. 70')}</Grid>
-        <Grid item xs={12}>
-          <Divider sx={{ my: 1 }} />
-          <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mt: 1, mb: 1 }}>Productivity</Typography>
-        </Grid>
-        <Grid item xs={12} sm={4}>{field('Velocity (story points)', 'velocity', 'e.g. 42')}</Grid>
-        <Grid item xs={12} sm={4}>{field('Cycle time (days)', 'cycle_time', 'e.g. 2.5')}</Grid>
-      </Grid>
-      <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+      </Box>
+
+      {/* Row 2 — Productivity (only checked metrics) */}
+      {selectedProductivity.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Divider sx={{ mb: 2 }} />
+          <SectionHeader label="Productivity" />
+          <Grid container spacing={2}>
+            {selectedProductivity.map(m => (
+              <Grid item xs={6} sm={3} key={m.key}>
+                <Field
+                  label={m.key === 'velocity' ? 'Velocity (story pts)' : 'Cycle time (days)'}
+                  fieldKey={m.key}
+                  hint={m.defaultHint}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
+
+      {/* Row 3 — Quality Metrics (only checked metrics) */}
+      {selectedQuality.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Divider sx={{ mb: 2 }} />
+          <SectionHeader label="Quality Metrics" />
+          <Grid container spacing={2}>
+            {selectedQuality.map(m => (
+              <Grid item xs={6} sm={3} key={m.key}>
+                <Field label={m.label} fieldKey={m.key} hint={m.defaultHint} />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
+
+      {selectedProductivity.length === 0 && selectedQuality.length === 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+          Select Health Metrics above to enable productivity and quality tracking here.
+        </Typography>
+      )}
+
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Button variant="contained" onClick={handleSave} disabled={saving || !projectId}>
           {saving ? 'Saving...' : 'Save Monthly Data'}
         </Button>
-        {message && <Typography variant="body2" color={message.startsWith('Error') ? 'error' : 'success.main'}>{message}</Typography>}
+        {message && (
+          <Typography variant="body2" color={message.startsWith('Error') ? 'error' : 'success.main'}>
+            {message}
+          </Typography>
+        )}
       </Box>
     </Paper>
   )
