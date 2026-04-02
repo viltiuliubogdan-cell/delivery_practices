@@ -1,4 +1,5 @@
-import { Box, Typography, Button, Container, Paper, Grid, Divider } from '@mui/material'
+import { Box, Typography, Button, Container, Paper, Grid, Divider, Checkbox, FormControlLabel } from '@mui/material'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AssignmentIcon from '@mui/icons-material/Assignment'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -45,8 +46,36 @@ const templates = [
   },
 ]
 
+const CHECKLIST_ITEMS = [
+  'Project Management process',
+  'Testing process',
+  'Requirements process',
+  'Developments process',
+  'Development guidelines',
+  'Deployment process',
+  'Non-Functional requirements',
+  'Risks/Decision/Issues log',
+  'Overall Scope burndown',
+  'Project statement',
+  'Project level milestones',
+  'Team estimations - Story points estimations',
+  'Induction for new members',
+  "KPI's - Velocity defined",
+  'Skills matrix',
+  'Architectural diagram',
+  'Disaster recovery process',
+  'Rollback process',
+  'Automation strategy and goals',
+  'Code quality - Sonar',
+  'Security/PenTest recurrent',
+]
+
 export default function Home() {
   const navigate = useNavigate()
+  const [checked, setChecked] = useState({})
+
+  const toggle = (item) => setChecked(prev => ({ ...prev, [item]: !prev[item] }))
+  const checkedCount = Object.values(checked).filter(Boolean).length
 
   return (
     <Box
@@ -186,6 +215,50 @@ export default function Home() {
                     </Button>
                   )}
                 </Box>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Delivery Checklist */}
+          <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)', mt: 3, mb: 3 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="subtitle1" fontWeight={700} color="white">
+              Delivery Checklist
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)' }}>
+              {checkedCount} / {CHECKLIST_ITEMS.length} completed
+            </Typography>
+          </Box>
+          <Grid container spacing={0.5}>
+            {CHECKLIST_ITEMS.map(item => (
+              <Grid item xs={12} sm={6} key={item}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={!!checked[item]}
+                      onChange={() => toggle(item)}
+                      size="small"
+                      sx={{
+                        color: 'rgba(255,255,255,0.6)',
+                        '&.Mui-checked': { color: '#a5d6a7' },
+                        py: 0.5,
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: checked[item] ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.9)',
+                        textDecoration: checked[item] ? 'line-through' : 'none',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {item}
+                    </Typography>
+                  }
+                  sx={{ m: 0, width: '100%' }}
+                />
               </Grid>
             ))}
           </Grid>
