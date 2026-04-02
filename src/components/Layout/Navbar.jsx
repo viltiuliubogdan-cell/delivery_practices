@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import AssignmentIcon from '@mui/icons-material/Assignment'
 import HomeIcon from '@mui/icons-material/Home'
+import FolderSpecialIcon from '@mui/icons-material/FolderSpecial'
 
 export default function Navbar() {
   const navigate = useNavigate()
@@ -42,6 +43,14 @@ export default function Navbar() {
             variant={location.pathname === '/dashboard' ? 'outlined' : 'text'}
           >
             Projects Dashboard
+          </Button>
+          <Button
+            color="inherit"
+            startIcon={<FolderSpecialIcon />}
+            onClick={() => navigate('/controlling')}
+            variant={location.pathname === '/controlling' ? 'outlined' : 'text'}
+          >
+            Project Controlling Templates
           </Button>
         </Box>
       </Toolbar>

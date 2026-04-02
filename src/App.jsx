@@ -3,6 +3,7 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import Home from './pages/Home'
 import ProjectDetails from './pages/ProjectDetails'
 import Dashboard from './pages/Dashboard'
+import ProjectControllingTemplates from './pages/ProjectControllingTemplates'
 
 const theme = createTheme({
   palette: {
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/project" element={<ProjectDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/controlling" element={<ProjectControllingTemplates />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
