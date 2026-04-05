@@ -5,12 +5,42 @@ import {
 } from '@mui/material'
 import Navbar from '../components/Layout/Navbar'
 import { supabase, supabaseReady } from '../lib/supabase'
-import HealthMetricsChart from '../components/Dashboard/HealthMetricsChart'
-import VelocityChart from '../components/Dashboard/VelocityChart'
-import NFRCoverageChart from '../components/Dashboard/NFRCoverageChart'
-import CustomerSatChart from '../components/Dashboard/CustomerSatChart'
-import EmployeeSatChart from '../components/Dashboard/EmployeeSatChart'
+import MetricLineChart from '../components/Dashboard/MetricLineChart'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
+
+const QUALITY_METRICS = [
+  { key: 'unit_testing_coverage', label: 'Unit Testing Coverage', unit: '%' },
+  { key: 'integration_testing', label: 'Integration Testing', unit: '%' },
+  { key: 'automation_testing_coverage', label: 'Automation Testing Coverage', unit: '%' },
+  { key: 'vulnerabilities_detected', label: 'Vulnerabilities Detected', unit: '' },
+  { key: 'failed_releases', label: 'Failed Release % per Quarter', unit: '%' },
+  { key: 'technical_depth', label: 'Technical Depth %', unit: '%' },
+  { key: 'code_review', label: 'Code Review', unit: '%' },
+  { key: 'ai_adoption', label: 'AI Adoption %', unit: '%' },
+]
+
+const PRODUCTIVITY_METRICS = [
+  { key: 'velocity', label: 'Velocity', unit: '' },
+  { key: 'cycle_time', label: 'Cycle Time', unit: ' days' },
+]
+
+function formatMonth(isoDate) {
+  const d = new Date(isoDate)
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
+
+function buildChartData(projects, monthlyData, getValue) {
+  const months = [...new Set(monthlyData.map(m => m.month))].sort()
+  return months.map(month => {
+    const row = { month: formatMonth(month) }
+    projects.forEach(p => {
+      const entry = monthlyData.find(m => m.project_id === p.id && m.month === month)
+      const val = entry != null ? getValue(entry) : null
+      if (val != null) row[p.name] = val
+    })
+    return row
+  })
+}
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true)
@@ -48,7 +78,7 @@ export default function Dashboard() {
     )
   }
 
-  const selectedProjects = selectedTab === 0 ? projects : projects.filter((_, i) => i === selectedTab - 1)
+  const filteredProjects = selectedTab === 0 ? projects : projects.filter((_, i) => i === selectedTab - 1)
   const noData = projects.length === 0
 
   return (
@@ -67,9 +97,10 @@ export default function Dashboard() {
 
         {!supabaseReady && (
           <Alert severity="warning" sx={{ mb: 3 }}>
-            <strong>Supabase not connected.</strong> Add your project URL and anon key to <code>.env.local</code> and restart the dev server. See <strong>SETUP.md</strong> for instructions.
+            <strong>Supabase not connected.</strong> Add your project URL and anon key to <code>.env.local</code> and restart the dev server.
           </Alert>
         )}
+
         {noData ? (
           <Paper elevation={2} sx={{ p: 6, textAlign: 'center' }}>
             <Typography variant="h6" color="text.secondary">No project data yet.</Typography>
@@ -121,12 +152,62 @@ export default function Dashboard() {
               </Tabs>
             </Paper>
 
-            {/* Charts */}
-            <HealthMetricsChart projects={selectedProjects} metricsData={metricsData} />
-            <VelocityChart projects={selectedProjects} monthlyData={monthlyData} />
-            <NFRCoverageChart projects={selectedProjects} nfrData={nfrData} />
-            <CustomerSatChart projects={selectedProjects} monthlyData={monthlyData} configData={configData} />
-            <EmployeeSatChart projects={selectedProjects} monthlyData={monthlyData} configData={configData} />
+            {/* Satisfaction Charts */}
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, mt: 1 }}>Satisfaction</Typography>
+
+            <MetricLineChart
+              title="Customer cNPS"
+              data={buildChartData(filteredProjects, monthlyData, e => e.customer_cnps)}
+              projects={filteredProjects}
+              unit=""
+            />
+
+            <MetricLineChart
+              title="Employee eNPS"
+              data={buildChartData(filteredProjects, monthlyData, e => e.employee_enps)}
+              projects={filteredProjects}
+              unit=""
+            />
+
+            <MetricLineChart
+              title="Employee Attrition"
+              data={buildChartData(filteredProjects, monthlyData, e => e.employee_attrition)}
+              projects={filteredProjects}
+              unit="%"
+            />
+
+            <MetricLineChart
+              title="Employee Participation Rate"
+              data={buildChartData(filteredProjects, monthlyData, e => e.employee_participation)}
+              projects={filteredProjects}
+              unit="%"
+            />
+
+            {/* Productivity Charts */}
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, mt: 3 }}>Productivity</Typography>
+
+            {PRODUCTIVITY_METRICS.map(metric => (
+              <MetricLineChart
+                key={metric.key}
+                title={metric.label}
+                data={buildChartData(filteredProjects, monthlyData, e => e[metric.key])}
+                projects={filteredProjects}
+                unit={metric.unit}
+              />
+            ))}
+
+            {/* Quality Charts */}
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, mt: 3 }}>Quality Metrics</Typography>
+
+            {QUALITY_METRICS.map(metric => (
+              <MetricLineChart
+                key={metric.key}
+                title={metric.label}
+                data={buildChartData(filteredProjects, monthlyData, e => e.quality_data?.[metric.key] ?? null)}
+                projects={filteredProjects}
+                unit={metric.unit}
+              />
+            ))}
           </>
         )}
       </Container>

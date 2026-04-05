@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import { Analytics } from '@vercel/analytics/react'
+import Chatbot from './components/Chatbot'
 import Home from './pages/Home'
 import ProjectDetails from './pages/ProjectDetails'
 import Dashboard from './pages/Dashboard'
@@ -40,6 +41,7 @@ export default function App() {
         </Routes>
       </BrowserRouter>
       <Analytics />
+      <Chatbot />
     </ThemeProvider>
   )
 }
