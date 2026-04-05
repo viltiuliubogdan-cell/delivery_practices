@@ -170,15 +170,15 @@ export default function Dashboard() {
             />
 
             <MetricLineChart
-              title="Employee Attrition"
-              data={buildChartData(filteredProjects, monthlyData, e => e.employee_attrition)}
+              title="Employee Participation Rate"
+              data={buildChartData(filteredProjects, monthlyData, e => e.employee_participation)}
               projects={filteredProjects}
               unit="%"
             />
 
             <MetricLineChart
-              title="Employee Participation Rate"
-              data={buildChartData(filteredProjects, monthlyData, e => e.employee_participation)}
+              title="Employee Attrition"
+              data={buildChartData(filteredProjects, monthlyData, e => e.employee_attrition)}
               projects={filteredProjects}
               unit="%"
             />
