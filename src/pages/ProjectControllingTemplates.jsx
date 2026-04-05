@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import {
-  Box, Container, Typography, Paper, Button, Grid, Divider,
-  Checkbox, FormControlLabel, LinearProgress
+  Box, Container, Typography, Paper, Button, Grid, Divider
 } from '@mui/material'
 import Navbar from '../components/Layout/Navbar'
 import DownloadIcon from '@mui/icons-material/Download'
@@ -49,7 +47,6 @@ const TEMPLATES = [
 ]
 
 const CHECKLIST_ITEMS = [
-  'Project Management process',
   'Testing process',
   'Requirements process',
   'Developments process',
@@ -73,12 +70,6 @@ const CHECKLIST_ITEMS = [
 ]
 
 export default function ProjectControllingTemplates() {
-  const [checked, setChecked] = useState({})
-
-  const toggle = (item) => setChecked(prev => ({ ...prev, [item]: !prev[item] }))
-  const checkedCount = Object.values(checked).filter(Boolean).length
-  const progress = Math.round((checkedCount / CHECKLIST_ITEMS.length) * 100)
-
   return (
     <Box sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
       <Navbar />
@@ -135,23 +126,13 @@ export default function ProjectControllingTemplates() {
 
         {/* Delivery Checklist */}
         <Paper elevation={2} sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <ChecklistIcon color="primary" />
             <Typography variant="h6" fontWeight={700}>Delivery Checklist</Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Track the delivery artefacts and processes in place for your project.
-            </Typography>
-            <Typography variant="body2" fontWeight={700} color="primary">
-              {checkedCount} / {CHECKLIST_ITEMS.length}
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={progress}
-            sx={{ mb: 3, height: 6, borderRadius: 3 }}
-          />
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Delivery artefacts and processes expected to be in place for your project.
+          </Typography>
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             {CHECKLIST_ITEMS.map((item, i) => (
@@ -160,33 +141,18 @@ export default function ProjectControllingTemplates() {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  py: 0.75,
+                  gap: 1.5,
+                  py: 0.85,
                   borderBottom: i < CHECKLIST_ITEMS.length - 1 ? '1px solid #f0f0f0' : 'none',
                 }}
               >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={!!checked[item]}
-                      onChange={() => toggle(item)}
-                      color="primary"
-                    />
-                  }
-                  label={
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: checked[item] ? 'text.disabled' : 'text.primary',
-                        textDecoration: checked[item] ? 'line-through' : 'none',
-                        transition: 'all 0.2s',
-                        fontWeight: checked[item] ? 400 : 500,
-                      }}
-                    >
-                      {item}
-                    </Typography>
-                  }
-                  sx={{ m: 0, width: '100%' }}
+                <Box
+                  sx={{
+                    width: 7, height: 7, borderRadius: '50%',
+                    backgroundColor: 'primary.main', flexShrink: 0,
+                  }}
                 />
+                <Typography variant="body1" fontWeight={500}>{item}</Typography>
               </Box>
             ))}
           </Box>
