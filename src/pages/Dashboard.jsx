@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box, Container, Typography, CircularProgress, Grid, Paper, Chip,
   Tabs, Tab, Divider, Alert
@@ -43,6 +44,7 @@ function buildChartData(projects, monthlyData, getValue) {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState([])
   const [metricsData, setMetricsData] = useState([])
@@ -119,7 +121,11 @@ export default function Dashboard() {
                 const latestMonthly = monthlyData.filter(m => m.project_id === p.id).slice(-1)[0]
                 return (
                   <Grid item xs={12} sm={6} md={4} key={p.id}>
-                    <Paper elevation={2} sx={{ p: 2.5, borderTop: '4px solid #1565c0', height: '100%' }}>
+                    <Paper
+                      elevation={2}
+                      onClick={() => navigate(`/project?name=${encodeURIComponent(p.name)}`)}
+                      sx={{ p: 2.5, borderTop: '4px solid #1565c0', height: '100%', cursor: 'pointer', '&:hover': { boxShadow: 6 } }}
+                    >
                       <Typography fontWeight={700} variant="subtitle1" noWrap>{p.name}</Typography>
                       <Typography variant="caption" color="text.secondary">{p.pm_name}</Typography>
                       <Divider sx={{ my: 1 }} />

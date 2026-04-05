@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Box, Container, Alert } from '@mui/material'
 import { supabase, supabaseReady } from '../lib/supabase'
 import SaveBar from '../components/Layout/SaveBar'
@@ -20,6 +21,7 @@ const initNfrs = () => {
 }
 
 export default function ProjectDetails() {
+  const [searchParams] = useSearchParams()
   const [saving, setSaving] = useState(false)
   const [projectId, setProjectId] = useState(null)
   const [projectName, setProjectName] = useState('')
@@ -32,6 +34,14 @@ export default function ProjectDetails() {
   const [enpsGoal, setEnpsGoal] = useState('')
   const [attritionGoal, setAttritionGoal] = useState('')
   const [participationGoal, setParticipationGoal] = useState('')
+
+  useEffect(() => {
+    const nameParam = searchParams.get('name')
+    if (nameParam) {
+      setProjectName(nameParam)
+      loadProject(nameParam)
+    }
+  }, [])
 
   const resetForm = () => {
     setProjectId(null)
