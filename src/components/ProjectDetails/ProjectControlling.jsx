@@ -4,7 +4,7 @@ import TableChartIcon from '@mui/icons-material/TableChart'
 import SlideshowIcon from '@mui/icons-material/Slideshow'
 import AssessmentIcon from '@mui/icons-material/Assessment'
 import GroupsIcon from '@mui/icons-material/Groups'
-import { downloadFinancialForecast, downloadKnowledgeMatrix } from '../../utils/templateGenerator'
+import { downloadKnowledgeMatrix } from '../../utils/templateGenerator'
 
 const templates = [
   {
@@ -12,8 +12,8 @@ const templates = [
     description: 'Actuals vs Planned, Profitability, Holiday Planning',
     icon: <AssessmentIcon />,
     color: '#1565c0',
-    action: downloadFinancialForecast,
-    type: 'generate',
+    href: '/templates/Financial_Forecast.xlsx',
+    type: 'download',
   },
   {
     label: 'Risk Log',
@@ -36,7 +36,7 @@ const templates = [
     description: 'Steering committee presentation template',
     icon: <SlideshowIcon />,
     color: '#e65100',
-    href: '/templates/Steering_Committee.pptx',
+    href: '/templates/Steering_Committee.pdf',
     type: 'download',
   },
 ]
